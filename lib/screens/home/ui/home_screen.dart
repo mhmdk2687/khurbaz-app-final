@@ -63,25 +63,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
         HomeTopWidget(),
 
+        // ----------------------------------------------------
+        // تم النقل: قسم عروض البقالة أصبح هنا (في الأعلى)
+        // ----------------------------------------------------
         SliverToBoxAdapter(
           child: SectionHeader(
             showViewMore: true,
-            title: 'احتياجاتك اليومية',
+            title: 'عروض خربز',
             onTap: () {
               pushTo(
                 context,
                 ProductsScreen(
                   categoryId: 1,
-                  title: 'احتياجاتك اليومية',
-                  daily: true,
-                  hasDiscount: false,
+                  title: 'عروض خربز',
+                  daily: false,
+                  hasDiscount: true,
                 ),
               );
             },
           ),
         ),
-        ProductHorizontalList(daily: true, hasDiscount: false),
+        ProductHorizontalList(daily: false, hasDiscount: true),
 
+        // ----------------------------------------------------
         SliverToBoxAdapter(child: SizedBox(height: 12)),
         SliverToBoxAdapter(
           child: Container(
@@ -111,7 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 SectionHeader(
                   showViewMore: false,
-
                   title: 'الفئات',
                   onTap: () {},
                 ),
@@ -121,34 +124,41 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
 
+        // ----------------------------------------------------
+        // تم النقل: قسم الاحتياجات اليومية أصبح هنا (في الأسفل)
+        // ----------------------------------------------------
         SliverToBoxAdapter(
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: AlignmentGeometry.topCenter,
                 end: AlignmentGeometry.bottomCenter,
-                colors: [Colors.white, light2Green],
+                colors: [
+                  Colors.white,
+                  light2Green,
+                ], // تأكد أن light2Green معرفة لديك
               ),
             ),
             child: SectionHeader(
               showViewMore: true,
-
-              title: 'عروض البقالة',
+              title: 'احتياجاتك اليومية',
               onTap: () {
                 pushTo(
                   context,
                   ProductsScreen(
                     categoryId: 1,
-                    title: 'عروض البقالة',
-                    daily: false,
-                    hasDiscount: true,
+                    title: 'احتياجاتك اليومية',
+                    daily: true,
+                    hasDiscount: false,
                   ),
                 );
               },
             ),
           ),
         ),
-        ProductHorizontalList(daily: false, hasDiscount: true),
+        ProductHorizontalList(daily: true, hasDiscount: false),
+
+        // ----------------------------------------------------
         SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
     );

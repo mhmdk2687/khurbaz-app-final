@@ -1,8 +1,11 @@
+import 'dart:io' show Platform;
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart' as intl;
+
 import 'package:moona/screens/checkout/payment_dialog.dart';
 import 'package:moona/utils/resources/app_colors.dart';
 import 'package:moona/utils/widgets/snackbar/failed_snackbar.dart';
@@ -32,10 +35,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String executionTimeTime = '';
   DateTime? executionTime;
 
+  String selectedPaymentMethod = 'credit_card';
+
+  bool _isApple = false;
+  bool _isAndroid = false;
+
   @override
   void initState() {
     super.initState();
     context.read<AddressesCubit>().loadAddresses();
+    _checkDeviceInfo();
+  }
+
+  Future<void> _checkDeviceInfo() async {
+    try {
+      final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+
+      if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        if (mounted) {
+          setState(() {
+            _isApple = true;
+          });
+        }
+      } else if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        if (mounted) {
+          setState(() {
+            _isAndroid = true;
+          });
+        }
+      }
+    } catch (e) {
+      // Silently fall back
+    }
   }
 
   @override
@@ -46,14 +79,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         backgroundColor: kScaffoldBackground,
         appBar: AppBar(
           leading: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: SvgPicture.asset('assets/images/arrow-right.svg'),
+            onPressed: () => Navigator.pop(context),
+            // icon: SvgPicture.asset('assets/images/arrow-right.svg'),
+            icon: Icon(Icons.arrow_back_rounded),
           ),
           title: const Text(
             'إتمام الطلب',
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
           ),
           centerTitle: true,
           elevation: 0,
@@ -82,18 +114,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           );
                         }
 
-                        if (!snapshot.hasData) {
-                          return const SizedBox();
-                        }
+                        if (!snapshot.hasData) return const SizedBox();
+
                         totalAmount = snapshot.data!.grandTotal;
                         return OrderSummaryCard(summary: snapshot.data!);
                       },
                     ),
 
                     const SizedBox(height: 20),
+
+                    /// ================= DELIVERY TIME =================
                     _Section(
                       title: 'وقت التوصيل',
-                      titleStyle: TextStyle(
+                      titleStyle: const TextStyle(
                         fontSize: 18,
                         color: Colors.black87,
                         fontWeight: FontWeight.w800,
@@ -166,7 +199,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               onChange: () {
                                 showModalBottomSheet(
                                   context: context,
-                                  builder: (_) => AddressesDialog(),
+                                  builder: (_) => const AddressesDialog(),
                                 );
                               },
                             );
@@ -182,33 +215,69 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     /// ================= PAYMENT METHOD =================
                     const _SectionTitle(
                       title: 'طريقة الدفع',
-                      icon: Icons.credit_card,
+                      icon: Icons.account_balance_wallet_outlined,
                     ),
 
-                    const SizedBox(height: 10),
+                    _PaymentOptionTile(
+                      title: 'البطاقة الائتمانية / مدى',
+                      icons: [
+                        SvgPicture.asset('assets/images/visa.svg', width: 32),
+                        const SizedBox(width: 4),
+                        SvgPicture.asset(
+                          'assets/images/mastercard.svg',
+                          width: 32,
+                        ),
+                        const SizedBox(width: 4),
+                        Image.asset('assets/images/mada.png', width: 32),
+                      ],
+                      isSelected: selectedPaymentMethod == 'credit_card',
+                      onTap: () =>
+                          setState(() => selectedPaymentMethod = 'credit_card'),
+                    ),
 
-                    _Card(
-                      child: Row(
-                        spacing: 4,
-                        children: [
-                          // const Icon(Icons.credit_card, color: kMainColor),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              "الدفع الإلكتروني",
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-
-                          SvgPicture.asset('assets/images/visa.svg', width: 40),
-                          SvgPicture.asset(
-                            'assets/images/mastercard.svg',
-                            width: 40,
-                          ),
+                    if (_isApple) ...[
+                      const SizedBox(height: 10),
+                      _PaymentOptionTile(
+                        title: 'Apple Pay',
+                        icons: [
                           Image.asset('assets/images/apple-pay.png', width: 40),
                         ],
+                        isSelected: selectedPaymentMethod == 'apple_pay',
+                        onTap: () =>
+                            setState(() => selectedPaymentMethod = 'apple_pay'),
                       ),
-                    ),
+                    ],
+
+                    if (_isAndroid) ...[
+                      const SizedBox(height: 10),
+
+                      // _PaymentOptionTile(
+                      //   title: 'Samsung Pay',
+                      //   icons: [
+                      //     SvgPicture.asset(
+                      //       'assets/images/samsung-pay.svg',
+                      //       width: 40,
+                      //     ),
+                      //   ],
+                      //   isSelected: selectedPaymentMethod == 'samsung_pay',
+                      //   onTap: () => setState(
+                      //     () => selectedPaymentMethod = 'samsung_pay',
+                      //   ),
+                      // ),
+                      // _PaymentOptionTile(
+                      //   title: 'Samsung Pay',
+                      //   icons: [
+                      //     SvgPicture.asset(
+                      //       'assets/images/samsung-pay.svg',
+                      //       width: 40,
+                      //     ),
+                      //   ],`
+                      //   isSelected: selectedPaymentMethod == 'samsung_pay',
+                      //   onTap: () => setState(
+                      //     () => selectedPaymentMethod = 'samsung_pay',
+                      //   ),
+                      // ),
+                    ],
                   ],
                 ),
               ),
@@ -250,7 +319,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 title: 'الرجاء اختيار وقت التوصيل',
                                 content: '',
                               );
-
                               return;
                             }
 
@@ -259,35 +327,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               orElse: () => state.addresses.first,
                             );
 
-                            // setState(() => checkoutLoading = true);
-                            //
-
-                            //
-                            // setState(() => checkoutLoading = false);
-                            //
-                            // if (!result['success']) {
-                            //   ScaffoldMessenger.of(context).showSnackBar(
-                            //     SnackBar(content: Text(result['message'])),
-                            //   );
-                            //   return;
-                            // }
-
-                            // final verifyResult = await Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (_) => PaymentWebViewScreen(
-                            //       executionTime: executionTime,
-                            //       checkoutUrl: result['checkout_url'],
-                            //       paymentId: result['payment_id'],
-                            //     ),
-                            //   ),
-                            // );
-                            showDialog(
+                            showModalBottomSheet(
                               context: context,
-                              builder: (_) => PaymentDialog(
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (_) => PaymentBottomSheet(
                                 amount: totalAmount,
                                 selectedAddress: selectedAddress,
                                 executionTime: executionTime,
+                                selectedMethod: selectedPaymentMethod,
                               ),
                             );
                           },
@@ -325,6 +373,60 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 }
 
+/// ===================== NEW PAYMENT OPTION WIDGET =====================
+class _PaymentOptionTile extends StatelessWidget {
+  final String title;
+  final List<Widget> icons;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _PaymentOptionTile({
+    required this.title,
+    required this.icons,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? kMainColor.withOpacity(0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? kMainColor : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: isSelected ? kMainColor : Colors.grey,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                  fontSize: 15,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            Row(children: icons),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// ===================== ORDER SUMMARY =====================
 
 class OrderSummaryCard extends StatelessWidget {
@@ -337,11 +439,16 @@ class OrderSummaryCard extends StatelessWidget {
     return _Card(
       child: Column(
         children: [
-          _SummaryRow('عدد المنتجات', summary.totalItems.toString()),
+          // Restored label, removed currency via the showCurrency param
+          _SummaryRow(
+            'عدد المنتجات',
+            summary.totalItems.toString(),
+            showCurrency: false,
+          ),
 
           const SizedBox(height: 10),
 
-          _SummaryRow('سعر المنتجات', '${summary.productsTotal}'),
+          _SummaryRow('سعر المنتجات', '${summary.productsTotal}', bold: true),
 
           const SizedBox(height: 10),
 
@@ -401,7 +508,6 @@ class DeliveryLocationCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// addressName عندك بدل title
                 Text(
                   address.addressName,
                   style: const TextStyle(
@@ -412,7 +518,6 @@ class DeliveryLocationCard extends StatelessWidget {
 
                 const SizedBox(height: 4),
 
-                /// نبني عنوان كامل احترافي
                 Text(
                   _buildFullAddress(address),
                   style: const TextStyle(fontSize: 13, color: kSubtitleColor),
@@ -503,20 +608,28 @@ class _SummaryRow extends StatelessWidget {
   final String value;
   final bool bold;
   final bool highlight;
+  final bool showCurrency;
 
   const _SummaryRow(
     this.label,
     this.value, {
     this.bold = false,
     this.highlight = false,
+    this.showCurrency = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(label, style: TextStyle(fontSize: 16)),
-        Spacer(),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: highlight ? 18 : 16,
+            fontWeight: highlight ? FontWeight.w700 : FontWeight.normal,
+          ),
+        ),
+        const Spacer(),
         Text(
           value,
           style: TextStyle(
@@ -526,10 +639,12 @@ class _SummaryRow extends StatelessWidget {
                 : highlight
                 ? kMainColor
                 : kTitleBodyColor,
-            fontSize: highlight ? 18 : 16,
+            fontSize: highlight ? 22 : 16,
           ),
         ),
-        if (value != 'توصيل مجاني') Currency(isRed: label == 'الخصم'),
+        // Used showCurrency here to hide the currency widget conditionally
+        if (showCurrency && value != 'توصيل مجاني')
+          Currency(isRed: label == 'الخصم'),
       ],
     );
   }
@@ -610,7 +725,7 @@ class _InfoBox extends StatelessWidget {
             Expanded(
               child: Text(
                 text,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'DINNextLT',
                   fontSize: 13,
                   color: Colors.black54,
@@ -632,7 +747,7 @@ class _InfoBox extends StatelessWidget {
                 ),
                 child: Text(
                   actionText,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'DINNextLT',
                     fontSize: 12,
                     color: kMainColor,
@@ -665,9 +780,10 @@ class _Section extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          spacing: 4,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.timer_sharp, color: kMainColor, size: 16),
+            const Icon(Icons.timer_sharp, color: kMainColor, size: 16),
+            const SizedBox(width: 4),
             Text(title, style: titleStyle),
           ],
         ),

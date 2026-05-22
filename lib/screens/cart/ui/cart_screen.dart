@@ -89,7 +89,7 @@ class _CartScreenState extends State<CartScreen> {
           appBar: AppBar(
             title: const Text(
               'سلة المشتريات',
-              style: TextStyle(fontWeight: FontWeight.w700),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
             ),
             centerTitle: true,
             leading: IconButton(
@@ -180,7 +180,7 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         child: const Text(
-                          'تأكيد الطلب',
+                          ' اذهب للدفع',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.white,

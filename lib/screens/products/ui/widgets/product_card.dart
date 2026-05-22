@@ -242,7 +242,7 @@ class _ProductCardState extends State<ProductCard> {
                             Text(
                               '${widget.product.finalPrice}',
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.red,
                               ),
@@ -257,7 +257,7 @@ class _ProductCardState extends State<ProductCard> {
                         Text(
                           '${widget.product.price}',
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 14,
                             fontWeight: FontWeight.w800,
                             color: Colors.black,
                           ),

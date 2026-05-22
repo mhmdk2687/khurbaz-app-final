@@ -122,34 +122,48 @@ class _ProductSearchScreenState extends State<ProductSearchScreen> {
       textDirection: TextDirection.rtl,
       child: Padding(
         padding: const EdgeInsets.all(14),
-        child: TextField(
-          controller: _controller,
-          textInputAction: TextInputAction.search,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: "ابحث عن منتج...",
-            hintStyle: const TextStyle(color: kMainColor),
-            prefixIcon: const Icon(Icons.search, color: kMainColor),
-            suffixIcon: _controller.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.close, color: kMainColor),
-                    onPressed: () {
-                      _controller.clear();
-                      setState(() {
-                        products.clear();
-                        hasSearched = false;
-                      });
-                    },
-                  ),
-            filled: true,
-            fillColor: lightGreen,
-
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
+        child: Row(
+          children: [
+            // Added Exit/Back Button Here
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+              onPressed: () => Navigator.pop(context),
+              tooltip: 'رجوع',
             ),
-          ),
+            const SizedBox(width: 8),
+
+            // Wrapped TextField in Expanded to prevent layout issues
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                textInputAction: TextInputAction.search,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: "ابحث عن منتج...",
+                  hintStyle: const TextStyle(color: kMainColor),
+                  prefixIcon: const Icon(Icons.search, color: kMainColor),
+                  suffixIcon: _controller.text.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.close, color: kMainColor),
+                          onPressed: () {
+                            _controller.clear();
+                            setState(() {
+                              products.clear();
+                              hasSearched = false;
+                            });
+                          },
+                        ),
+                  filled: true,
+                  fillColor: lightGreen,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -214,7 +228,6 @@ class _ProductSearchScreenState extends State<ProductSearchScreen> {
         selectedColor: kMainColor,
         checkmarkColor: Colors.white,
         labelStyle: TextStyle(color: value ? Colors.white : Colors.black),
-
         onSelected: (_) => onTap(),
       ),
     );
