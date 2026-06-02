@@ -5,28 +5,31 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
+      cocoapods: default
 
     scripts:
-      - name: Clean everything
+      - name: Full Clean
         script: |
           flutter clean
           rm -rf ios/Pods
           rm -rf ios/Podfile.lock
+          rm -rf ios/.symlinks
+          rm -rf ios/Flutter/Flutter.framework
           rm -rf ~/Library/Developer/Xcode/DerivedData
           flutter pub get
 
-      - name: Force CocoaPods clean install
+      - name: Force Pods install (FIX GoogleMaps)
         script: |
           cd ios
           pod deintegrate || true
           pod cache clean --all || true
           pod repo update
-          pod install --repo-update
+          pod install --repo-update --verbose
           cd ..
 
       - name: Build IPA
         script: |
-          flutter build ipa --release
+          flutter build ipa --release --no-tree-shake-icons
 
     artifacts:
       - build/ios/ipa/*.ipa
