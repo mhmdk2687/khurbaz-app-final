@@ -5,22 +5,25 @@ workflows:
     environment:
       flutter: 3.32.8
       xcode: 16.2
+      cocoapods: 1.15.2
 
     scripts:
-      - name: Clean Flutter
+      - name: Clean project
         script: |
           flutter clean
           rm -rf ios/Pods
           rm -rf ios/Podfile.lock
+          rm -rf ~/Library/Caches/CocoaPods
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
           flutter pub get
 
-      - name: Install Pods
+      - name: Install Pods (fix Google Maps issue)
         script: |
           cd ios
-          pod deintegrate
+          pod deintegrate || true
+          pod cache clean --all
           pod repo update
-          pod install --repo-update
+          pod install --repo-update --clean-install
           cd ..
 
       - name: Build IPA
