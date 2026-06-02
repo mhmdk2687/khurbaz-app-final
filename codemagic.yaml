@@ -3,8 +3,8 @@ workflows:
     name: iOS Workflow
 
     environment:
-      flutter: stable
-      xcode: latest
+      flutter: 3.32.8
+      xcode: 16.2
 
     scripts:
       - name: Clean Flutter
@@ -18,8 +18,10 @@ workflows:
       - name: Install Pods
         script: |
           cd ios
+          pod deintegrate
           pod repo update
-          pod install
+          pod install --repo-update
+          cd ..
 
       - name: Build IPA
         script: |
