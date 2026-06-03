@@ -1,5 +1,4 @@
 import 'dart:io' show Platform;
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
@@ -47,27 +46,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _checkDeviceInfo();
   }
 
-  Future<void> _checkDeviceInfo() async {
-    try {
-      final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-
-      if (Platform.isIOS) {
-        final iosInfo = await deviceInfo.iosInfo;
-        if (mounted) {
-          setState(() {
-            _isApple = true;
-          });
-        }
-      } else if (Platform.isAndroid) {
-        final androidInfo = await deviceInfo.androidInfo;
-        if (mounted) {
-          setState(() {
-            _isAndroid = true;
-          });
-        }
-      }
-    } catch (e) {
-      // Silently fall back
+  void _checkDeviceInfo() {
+    if (Platform.isIOS) {
+      _isApple = true;
+    } else if (Platform.isAndroid) {
+      _isAndroid = true;
     }
   }
 
@@ -81,7 +64,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           leading: IconButton(
             onPressed: () => Navigator.pop(context),
             // icon: SvgPicture.asset('assets/images/arrow-right.svg'),
-            icon: Icon(Icons.arrow_back_rounded),
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
           title: const Text(
             'إتمام الطلب',
@@ -264,19 +247,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       //     () => selectedPaymentMethod = 'samsung_pay',
                       //   ),
                       // ),
-                      // _PaymentOptionTile(
-                      //   title: 'Samsung Pay',
-                      //   icons: [
-                      //     SvgPicture.asset(
-                      //       'assets/images/samsung-pay.svg',
-                      //       width: 40,
-                      //     ),
-                      //   ],`
-                      //   isSelected: selectedPaymentMethod == 'samsung_pay',
-                      //   onTap: () => setState(
-                      //     () => selectedPaymentMethod = 'samsung_pay',
-                      //   ),
-                      // ),
                     ],
                   ],
                 ),
@@ -439,34 +409,26 @@ class OrderSummaryCard extends StatelessWidget {
     return _Card(
       child: Column(
         children: [
-          // Restored label, removed currency via the showCurrency param
           _SummaryRow(
             'عدد المنتجات',
             summary.totalItems.toString(),
             showCurrency: false,
           ),
-
           const SizedBox(height: 10),
-
           _SummaryRow('سعر المنتجات', '${summary.productsTotal}', bold: true),
-
           const SizedBox(height: 10),
-
           _SummaryRow(
             'رسوم التوصيل',
             summary.deliveryFee == 0 ? 'توصيل مجاني' : '${summary.deliveryFee}',
           ),
-
           if (summary.discountTotal > 0) ...[
             const SizedBox(height: 10),
             _SummaryRow('الخصم', '- ${summary.discountTotal}'),
           ],
-
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Divider(),
           ),
-
           _SummaryRow(
             'الإجمالي',
             '${summary.grandTotal}',
@@ -501,9 +463,7 @@ class DeliveryLocationCard extends StatelessWidget {
             ),
             child: const Icon(Icons.location_on_outlined, color: kMainColor),
           ),
-
           const SizedBox(width: 12),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,9 +475,7 @@ class DeliveryLocationCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-
                 const SizedBox(height: 4),
-
                 Text(
                   _buildFullAddress(address),
                   style: const TextStyle(fontSize: 13, color: kSubtitleColor),
@@ -525,7 +483,6 @@ class DeliveryLocationCard extends StatelessWidget {
               ],
             ),
           ),
-
           TextButton(
             onPressed: onChange,
             child: const Text('تغيير', style: TextStyle(color: kMainColor)),
@@ -642,7 +599,6 @@ class _SummaryRow extends StatelessWidget {
             fontSize: highlight ? 22 : 16,
           ),
         ),
-        // Used showCurrency here to hide the currency widget conditionally
         if (showCurrency && value != 'توصيل مجاني')
           Currency(isRed: label == 'الخصم'),
       ],
