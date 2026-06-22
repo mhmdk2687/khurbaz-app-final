@@ -16,6 +16,7 @@ class ProductsScreen extends StatefulWidget {
   final String title;
   final bool daily;
   final bool hasDiscount;
+  final int? initialSubCategoryId;
 
   const ProductsScreen({
     super.key,
@@ -23,6 +24,7 @@ class ProductsScreen extends StatefulWidget {
     required this.title,
     required this.daily,
     required this.hasDiscount,
+    this.initialSubCategoryId,
   });
 
   @override
@@ -30,6 +32,7 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
+  int? _activeSubCategoryId;
   int selectedSubIndex = 0;
 
   List<CategoryModel> categories = [];
@@ -88,6 +91,21 @@ class _ProductsScreenState extends State<ProductsScreen> {
     setState(() {});
   }
 
+  // Future<void> _loadSubCategories() async {
+  //   loadingSubs = true;
+  //   setState(() {});
+
+  //   subs = await CategoriesApi.getSubCategories(widget.categoryId);
+
+  //   loadingSubs = false;
+
+  //   if (subs.isNotEmpty) {
+  //     selectedSubIndex = 0;
+  //     await _loadProducts(subs.first.id);
+  //   }
+
+  //   setState(() {});
+  // }
   Future<void> _loadSubCategories() async {
     loadingSubs = true;
     setState(() {});
@@ -97,8 +115,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
     loadingSubs = false;
 
     if (subs.isNotEmpty) {
-      selectedSubIndex = 0;
-      await _loadProducts(subs.first.id);
+      final initialIndex = widget.initialSubCategoryId == null
+          ? 0
+          : subs.indexWhere((sub) => sub.id == widget.initialSubCategoryId);
+
+      selectedSubIndex = initialIndex >= 0 ? initialIndex : 0;
+      _activeSubCategoryId = subs[selectedSubIndex].id;
+
+      await _loadProducts(_activeSubCategoryId!);
     }
 
     setState(() {});
@@ -106,7 +130,31 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   /// ================= PRODUCTS =================
 
+  // Future<void> _loadProducts(int subCategoryId) async {
+  //   loadingProducts = true;
+  //   loadingMore = false;
+  //   hasMore = true;
+  //   currentPage = 1;
+  //   products.clear();
+
+  //   setState(() {});
+
+  //   final res = await ProductsApi.getProducts(
+  //     subCategoryId: widget.hasDiscount || widget.daily ? null : subCategoryId,
+  //     page: currentPage,
+  //     daily: widget.daily,
+  //     hasDiscount: widget.hasDiscount,
+  //   );
+
+  //   products = res;
+  //   hasMore = res.isNotEmpty;
+
+  //   loadingProducts = false;
+  //   setState(() {});
+  // }
   Future<void> _loadProducts(int subCategoryId) async {
+    _activeSubCategoryId = subCategoryId;
+
     loadingProducts = true;
     loadingMore = false;
     hasMore = true;
@@ -128,9 +176,32 @@ class _ProductsScreenState extends State<ProductsScreen> {
     loadingProducts = false;
     setState(() {});
   }
+  // Future<void> _loadMore() async {
+  //   if (!hasMore) return;
 
+  //   loadingMore = true;
+  //   currentPage++;
+
+  //   setState(() {});
+
+  //   final res = await ProductsApi.getProducts(
+  //     daily: widget.daily,
+  //     hasDiscount: widget.hasDiscount,
+  //     subCategoryId: subs[selectedSubIndex].id,
+  //     page: currentPage,
+  //   );
+
+  //   if (res.isEmpty) {
+  //     hasMore = false;
+  //   } else {
+  //     products.addAll(res);
+  //   }
+
+  //   loadingMore = false;
+  //   setState(() {});
+  // }
   Future<void> _loadMore() async {
-    if (!hasMore) return;
+    if (!hasMore || _activeSubCategoryId == null) return;
 
     loadingMore = true;
     currentPage++;
@@ -140,7 +211,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final res = await ProductsApi.getProducts(
       daily: widget.daily,
       hasDiscount: widget.hasDiscount,
-      subCategoryId: subs[selectedSubIndex].id,
+      subCategoryId:
+          widget.hasDiscount || widget.daily ? null : _activeSubCategoryId,
       page: currentPage,
     );
 
@@ -241,47 +313,54 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 child: loadingProducts
                     ? const ProductsGridShimmer()
                     : products.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'لا توجد منتجات',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      )
-                    : SingleChildScrollView(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(12),
-                        child: Wrap(
-                          spacing: 0,
-                          runSpacing: 12,
-                          children: [
-                            ...products.map((product) {
-                              return SizedBox(
-                                width:
-                                    (MediaQuery.of(context).size.width - 24) /
-                                    2,
-                                height: 250,
-                                child: ProductCard(
-                                  product: product,
-                                  onPop: () {
-                                    _loadProducts(subs[selectedSubIndex].id);
-                                  },
-                                ),
-                              );
-                            }),
-
-                            if (loadingMore)
-                              const SizedBox(
-                                width: double.infinity,
-                                child: Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(20),
-                                    child: CircularProgressIndicator(),
+                        ? const Center(
+                            child: Text(
+                              'لا توجد منتجات',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          )
+                        : SingleChildScrollView(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.only(
+                              top: 12,
+                              bottom: 12,
+                              right:
+                                  4, // Decrease to move cards closer to the right edge
+                              left:
+                                  16, // Increase to push cards away from the left edge
+                            ),
+                            child: Wrap(
+                              spacing: 0,
+                              runSpacing: 12,
+                              children: [
+                                ...products.map((product) {
+                                  return SizedBox(
+                                    width: (MediaQuery.of(context).size.width -
+                                            24) /
+                                        2,
+                                    height: 250,
+                                    child: ProductCard(
+                                      product: product,
+                                      onPop: () {
+                                        _loadProducts(
+                                            subs[selectedSubIndex].id);
+                                      },
+                                    ),
+                                  );
+                                }),
+                                if (loadingMore)
+                                  const SizedBox(
+                                    width: double.infinity,
+                                    child: Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(20),
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+                              ],
+                            ),
+                          ),
               ),
             ],
           ),

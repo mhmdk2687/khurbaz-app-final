@@ -30,19 +30,18 @@ class _SubCategoriesBannersState extends State<SubCategoriesBanners> {
       final response = await http.get(
         Uri.parse("$baseUrl/sub-categories-banners"),
       );
-      print('====fetchBanners ${response.body}');
 
       final data = jsonDecode(response.body);
 
       if (data['status'] == true) {
         final List list = data['banners'];
-
         banners = list.map((e) => SubCategoryModel.fromJson(e)).toList();
       }
     } catch (e) {
       banners = [];
     }
 
+    if (!mounted) return;
     setState(() => loading = false);
   }
 
@@ -71,6 +70,7 @@ class _SubCategoriesBannersState extends State<SubCategoriesBanners> {
             width: MediaQuery.of(context).size.width * 0.75,
             child: PromoCard(
               categoryId: banner.categoryId,
+              subCategoryId: banner.id,
               title: banner.arName,
               image: banner.homeBanner ?? banner.imageUrl,
             ),
@@ -83,6 +83,7 @@ class _SubCategoriesBannersState extends State<SubCategoriesBanners> {
 
 class PromoCard extends StatelessWidget {
   final int categoryId;
+  final int subCategoryId;
   final String title;
   final String image;
 
@@ -91,6 +92,7 @@ class PromoCard extends StatelessWidget {
     required this.title,
     required this.image,
     required this.categoryId,
+    required this.subCategoryId,
   });
 
   @override
@@ -100,9 +102,10 @@ class PromoCard extends StatelessWidget {
         context,
         ProductsScreen(
           categoryId: categoryId,
+          initialSubCategoryId: subCategoryId,
           daily: false,
           hasDiscount: false,
-          title: '',
+          title: title,
         ),
       ),
       child: ClipRRect(

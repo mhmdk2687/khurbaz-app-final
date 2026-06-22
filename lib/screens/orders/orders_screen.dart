@@ -78,14 +78,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: orders.isEmpty
-            ? Colors.white
-            : const Color(0xFFF6F7F9),
+        backgroundColor:
+            orders.isEmpty ? Colors.white : const Color(0xFFF6F7F9),
         appBar: AppBar(
           leading: SizedBox(),
           title: const Text(
             'طلباتي',
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20),
           ),
           centerTitle: true,
         ),
@@ -95,32 +94,32 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 child: SignupSection(),
               )
             : loading
-            ? const Center(child: CircularProgressIndicator())
-            : orders.isEmpty
-            ? NoOrders()
-            : ListView.separated(
-                controller: _controller,
-                padding: const EdgeInsets.only(
-                  top: 16,
-                  bottom: 100,
-                  right: 16,
-                  left: 16,
-                ),
-                itemCount: orders.length + (loadingMore ? 1 : 0),
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  if (index == orders.length) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
+                ? const Center(child: CircularProgressIndicator())
+                : orders.isEmpty
+                    ? NoOrders()
+                    : ListView.separated(
+                        controller: _controller,
+                        padding: const EdgeInsets.only(
+                          top: 16,
+                          bottom: 100,
+                          right: 16,
+                          left: 16,
+                        ),
+                        itemCount: orders.length + (loadingMore ? 1 : 0),
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          if (index == orders.length) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
 
-                  return OrderCard(order: orders[index]);
-                },
-              ),
+                          return OrderCard(order: orders[index]);
+                        },
+                      ),
       ),
     );
   }

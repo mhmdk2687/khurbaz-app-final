@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../resources/app_colors.dart';
 
 class Field extends StatefulWidget {
-  Field({
+  const Field({
     super.key,
     required this.text,
     required this.validateText,
@@ -19,10 +20,12 @@ class Field extends StatefulWidget {
     this.maxLength,
     this.maxLines = 1,
     this.expands = false,
+    this.validator,
+    this.inputFormatters,
   });
 
   final Function(String)? onFieldSubmitted;
-  final dynamic controller;
+  final TextEditingController? controller;
   final String text;
   final String validateText;
   final VoidCallback? onTap;
@@ -31,22 +34,19 @@ class Field extends StatefulWidget {
   final Widget? suffixIcon;
   final Widget? prefixIcon;
   final int? maxLength;
-  int? maxLines;
+  final int maxLines;
   final bool obscureText;
   final bool readOnly;
   final bool expands;
+
+  final String? Function(String?)? validator;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   State<Field> createState() => _FieldState();
 }
 
 class _FieldState extends State<Field> {
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -64,13 +64,17 @@ class _FieldState extends State<Field> {
         controller: widget.controller,
         readOnly: widget.readOnly,
         onTap: widget.onTap,
-        onFieldSubmitted: (val) => widget.onFieldSubmitted!(val),
-        validator: (text) {
-          if (text == null || text == "") {
-            return widget.validateText;
-          }
-          return null;
-        },
+        onFieldSubmitted: widget.onFieldSubmitted != null
+            ? (val) => widget.onFieldSubmitted?.call(val)
+            : null,
+        inputFormatters: widget.inputFormatters,
+        validator: widget.validator ??
+            (text) {
+              if (text == null || text.trim().isEmpty) {
+                return widget.validateText;
+              }
+              return null;
+            },
         style: const TextStyle(height: 1),
         decoration: InputDecoration(
           suffixIcon: widget.suffixIcon,

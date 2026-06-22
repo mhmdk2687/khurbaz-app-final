@@ -1,6 +1,9 @@
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:flutter/gestures.dart'; // تم إضافة هذا الاستيراد لتفعيل ميزة الضغط
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moona/screens/auth/uis/screens/login_screen.dart';
+import 'package:moona/utils/helper/navigation/push_to.dart';
 
 import '../../../../state-managment/bloc/auth/auth_cubit.dart';
 import '../../../../utils/helper/navigation/push_replacement.dart';
@@ -147,7 +150,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  TextSpan(text: ' و '),
+                                  const TextSpan(text: ' و '),
                                   TextSpan(
                                     text: 'سياسة الخصوصية',
                                     style: TextStyle(
@@ -218,6 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 16),
 
+                      /// ================= الـ RichText المحدث هنا =================
                       RichText(
                         text: TextSpan(
                           text: 'هل لديك حساب؟ ',
@@ -225,6 +229,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           children: [
                             TextSpan(
                               text: 'تسجيل الدخول',
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  pushTo(context, LoginScreen());
+                                },
                               style: TextStyle(
                                 color: kMainColor,
                                 fontWeight: FontWeight.w700,

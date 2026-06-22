@@ -16,7 +16,11 @@ class OrderDetailsScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('تفاصيل الطلب')),
+        appBar: AppBar(
+            title: const Text(
+          'تفاصيل الطلب',
+          style: TextStyle(fontSize: 20),
+        )),
         body: SafeArea(
           child: FutureBuilder<OrderDetailsModel>(
             future: OrdersApi.getOrderDetails(orderId),
@@ -37,20 +41,14 @@ class OrderDetailsScreen extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-
                   const SizedBox(height: 6),
-
                   Text(formatDate(DateTime.parse(order.date.toString()))),
-
                   const SizedBox(height: 20),
-
                   const Text(
                     'المنتجات',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
-
                   const SizedBox(height: 12),
-
                   ...order.items.map(
                     (item) => Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -84,11 +82,8 @@ class OrderDetailsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   const Divider(),
-
                   const SizedBox(height: 8),
-
                   Text(
                     'الإجمالي: ${order.grandTotal} ﷼',
                     style: const TextStyle(

@@ -10,6 +10,7 @@ import 'package:moona/utils/resources/app_colors.dart';
 import 'package:moona/utils/widgets/snackbar/failed_snackbar.dart';
 
 import '../../managers/server/cart/cart_api.dart';
+import '../../managers/server/payment_service.dart';
 import '../../utils/helper/navigation/push_to.dart';
 import '../../utils/widgets/currency.dart';
 import '../addresses/data/entities/address_entity.dart';
@@ -39,11 +40,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _isApple = false;
   bool _isAndroid = false;
 
+  late Future<CartSummury> _summaryFuture;
+
+  final TextEditingController _couponController = TextEditingController();
+  bool _couponLoading = false;
+  bool _couponApplied = false;
+  String? _appliedCouponCode;
+  double _couponDiscount = 0;
+  double _finalAmount = 0;
+
   @override
   void initState() {
     super.initState();
     context.read<AddressesCubit>().loadAddresses();
     _checkDeviceInfo();
+    _summaryFuture = CartApi.summary();
+  }
+
+  @override
+  void dispose() {
+    _couponController.dispose();
+    super.dispose();
   }
 
   void _checkDeviceInfo() {
@@ -51,6 +68,57 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       _isApple = true;
     } else if (Platform.isAndroid) {
       _isAndroid = true;
+    }
+  }
+
+  Future<void> _applyCoupon(CartSummury summary) async {
+    final code = _couponController.text.trim();
+
+    if (code.isEmpty) {
+      setState(() {
+        _couponApplied = false;
+        _appliedCouponCode = null;
+        _couponDiscount = 0;
+        _finalAmount = summary.grandTotal;
+      });
+      return;
+    }
+
+    setState(() => _couponLoading = true);
+
+    final result = await PaymentService().validateCoupon(couponCode: code);
+
+    if (!mounted) return;
+
+    setState(() => _couponLoading = false);
+
+    if (result['success'] == true) {
+      final discount = (result['coupon_discount'] as double);
+
+      setState(() {
+        _couponApplied = true;
+        _appliedCouponCode = code;
+        _couponDiscount = discount;
+        _finalAmount =
+            (summary.grandTotal - discount).clamp(0, double.infinity);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم تطبيق الكوبون بنجاح')),
+      );
+    } else {
+      setState(() {
+        _couponApplied = false;
+        _appliedCouponCode = null;
+        _couponDiscount = 0;
+        _finalAmount = summary.grandTotal;
+      });
+
+      showFailedTopSnackBar(
+        context: context,
+        title: result['message'] ?? 'الكوبون غير صالح',
+        content: '',
+      );
     }
   }
 
@@ -63,7 +131,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         appBar: AppBar(
           leading: IconButton(
             onPressed: () => Navigator.pop(context),
-            // icon: SvgPicture.asset('assets/images/arrow-right.svg'),
             icon: const Icon(Icons.arrow_back_rounded),
           ),
           title: const Text(
@@ -87,7 +154,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
 
                     FutureBuilder<CartSummury>(
-                      future: CartApi.summary(),
+                      future: _summaryFuture,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -99,8 +166,125 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                         if (!snapshot.hasData) return const SizedBox();
 
-                        totalAmount = snapshot.data!.grandTotal;
-                        return OrderSummaryCard(summary: snapshot.data!);
+                        final summary = snapshot.data!;
+
+                        if (!_couponApplied) {
+                          _finalAmount = summary.grandTotal;
+                          totalAmount = summary.grandTotal;
+                        } else {
+                          totalAmount = _finalAmount;
+                        }
+
+                        final payableAmount =
+                            _couponApplied ? _finalAmount : summary.grandTotal;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            OrderSummaryCard(
+                              summary: summary,
+                              couponDiscount:
+                                  _couponApplied ? _couponDiscount : 0,
+                              finalGrandTotal: payableAmount,
+                            ),
+                            const SizedBox(height: 16),
+                            _Card(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'كوبون الخصم',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _couponController,
+                                          textDirection: TextDirection.ltr,
+                                          decoration: InputDecoration(
+                                            hintText: 'أدخل كود الكوبون',
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      SizedBox(
+                                        height: 52,
+                                        child: ElevatedButton(
+                                          onPressed: _couponLoading
+                                              ? null
+                                              : () => _applyCoupon(summary),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: kMainColor,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          child: _couponLoading
+                                              ? const SizedBox(
+                                                  height: 20,
+                                                  width: 20,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: Colors.white,
+                                                  ),
+                                                )
+                                              : Text(
+                                                  _couponApplied
+                                                      ? 'تحديث'
+                                                      : 'تطبيق',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (_couponApplied &&
+                                      _appliedCouponCode != null) ...[
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'تم تطبيق: $_appliedCouponCode',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        TextButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _couponApplied = false;
+                                              _appliedCouponCode = null;
+                                              _couponDiscount = 0;
+                                              _finalAmount = summary.grandTotal;
+                                              totalAmount = summary.grandTotal;
+                                              _couponController.clear();
+                                            });
+                                          },
+                                          child: const Text('إزالة'),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
                       },
                     ),
 
@@ -129,6 +313,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             maxTime: DateTime.now().add(
                               const Duration(days: 365),
                             ),
+                            locale: LocaleType.ar,
                             onConfirm: (date) {
                               setState(() {
                                 executionTime = date;
@@ -170,12 +355,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               );
                             }
 
-                            final AddressEntity selectedAddress = state
-                                .addresses
-                                .firstWhere(
-                                  (e) => e.isDefault,
-                                  orElse: () => state.addresses.first,
-                                );
+                            final AddressEntity selectedAddress =
+                                state.addresses.firstWhere(
+                              (e) => e.isDefault,
+                              orElse: () => state.addresses.first,
+                            );
 
                             return DeliveryLocationCard(
                               address: selectedAddress,
@@ -233,7 +417,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                     if (_isAndroid) ...[
                       const SizedBox(height: 10),
-
                       // _PaymentOptionTile(
                       //   title: 'Samsung Pay',
                       //   icons: [
@@ -283,6 +466,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               );
                               return;
                             }
+
                             if (time != 'now' && executionTime == null) {
                               showFailedTopSnackBar(
                                 context: context,
@@ -297,15 +481,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               orElse: () => state.addresses.first,
                             );
 
+                            final summary = await _summaryFuture;
+                            final payableAmount = _couponApplied
+                                ? _finalAmount
+                                : summary.grandTotal;
+
                             showModalBottomSheet(
                               context: context,
                               isScrollControlled: true,
                               backgroundColor: Colors.transparent,
                               builder: (_) => PaymentBottomSheet(
-                                amount: totalAmount,
+                                amount: payableAmount,
                                 selectedAddress: selectedAddress,
                                 executionTime: executionTime,
                                 selectedMethod: selectedPaymentMethod,
+                                couponCode:
+                                    _couponApplied ? _appliedCouponCode : null,
                               ),
                             );
                           },
@@ -401,8 +592,15 @@ class _PaymentOptionTile extends StatelessWidget {
 
 class OrderSummaryCard extends StatelessWidget {
   final CartSummury summary;
+  final double couponDiscount;
+  final double finalGrandTotal;
 
-  const OrderSummaryCard({super.key, required this.summary});
+  const OrderSummaryCard({
+    super.key,
+    required this.summary,
+    required this.couponDiscount,
+    required this.finalGrandTotal,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -415,15 +613,31 @@ class OrderSummaryCard extends StatelessWidget {
             showCurrency: false,
           ),
           const SizedBox(height: 10),
-          _SummaryRow('سعر المنتجات', '${summary.productsTotal}', bold: true),
+          _SummaryRow(
+            'سعر المنتجات',
+            summary.productsTotal.toStringAsFixed(2),
+            bold: true,
+          ),
           const SizedBox(height: 10),
           _SummaryRow(
             'رسوم التوصيل',
-            summary.deliveryFee == 0 ? 'توصيل مجاني' : '${summary.deliveryFee}',
+            summary.deliveryFee == 0
+                ? 'توصيل مجاني'
+                : summary.deliveryFee.toStringAsFixed(2),
           ),
           if (summary.discountTotal > 0) ...[
             const SizedBox(height: 10),
-            _SummaryRow('الخصم', '- ${summary.discountTotal}'),
+            _SummaryRow(
+              'خصم المنتجات',
+              '- ${summary.discountTotal.toStringAsFixed(2)}',
+            ),
+          ],
+          if (couponDiscount > 0) ...[
+            const SizedBox(height: 10),
+            _SummaryRow(
+              'خصم الكوبون',
+              '- ${couponDiscount.toStringAsFixed(2)}',
+            ),
           ],
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
@@ -431,7 +645,7 @@ class OrderSummaryCard extends StatelessWidget {
           ),
           _SummaryRow(
             'الإجمالي',
-            '${summary.grandTotal}',
+            finalGrandTotal.toStringAsFixed(2),
             bold: true,
             highlight: true,
           ),
@@ -591,16 +805,16 @@ class _SummaryRow extends StatelessWidget {
           value,
           style: TextStyle(
             fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
-            color: label == 'الخصم'
+            color: label == 'الخصم' || label == 'خصم الكوبون'
                 ? Colors.red
                 : highlight
-                ? kMainColor
-                : kTitleBodyColor,
+                    ? kMainColor
+                    : kTitleBodyColor,
             fontSize: highlight ? 22 : 16,
           ),
         ),
         if (showCurrency && value != 'توصيل مجاني')
-          Currency(isRed: label == 'الخصم'),
+          Currency(isRed: label == 'الخصم' || label == 'خصم الكوبون'),
       ],
     );
   }

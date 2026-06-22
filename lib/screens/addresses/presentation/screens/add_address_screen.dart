@@ -10,6 +10,7 @@ import '../../../../utils/resources/app_colors.dart';
 import '../../../../utils/widgets/field.dart';
 import '../../data/entities/address_entity.dart';
 import '../cubit/addresses_cubit.dart';
+import '.../../pick_location_map_screen.dart';
 
 class AddAddressScreen extends StatefulWidget {
   const AddAddressScreen({super.key, required this.add});
@@ -51,6 +52,103 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     // }
     // TODO: implement initState
     super.initState();
+  }
+
+  Widget _buildMapPreview() {
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PickLocationMapScreen(
+              view: false,
+              location: location,
+            ),
+          ),
+        );
+
+        if (result != null && result is LatLng) {
+          setState(() {
+            location = result;
+          });
+        }
+      },
+      child: Container(
+        height: 220,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: Colors.white,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: location == null
+            ? Stack(
+                alignment: Alignment.center,
+                children: [
+                  GoogleMap(
+                    initialCameraPosition: const CameraPosition(
+                      target: LatLng(24.7136, 46.6753),
+                      zoom: 12,
+                    ),
+                    zoomControlsEnabled: false,
+                    myLocationButtonEnabled: false,
+                    scrollGesturesEnabled: false,
+                    zoomGesturesEnabled: false,
+                    rotateGesturesEnabled: false,
+                    tiltGesturesEnabled: false,
+                  ),
+                  Container(
+                    color: Colors.black.withOpacity(0.15),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(
+                          Icons.location_on,
+                          color: kMainColor,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'حدد موقعك',
+                          style: TextStyle(
+                            fontFamily: 'DINNextLT',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            : GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: location!,
+                  zoom: 15,
+                ),
+                markers: {
+                  Marker(
+                    markerId: const MarkerId('selected'),
+                    position: location!,
+                  ),
+                },
+                zoomControlsEnabled: false,
+                myLocationButtonEnabled: false,
+                scrollGesturesEnabled: false,
+                zoomGesturesEnabled: false,
+                rotateGesturesEnabled: false,
+                tiltGesturesEnabled: false,
+              ),
+      ),
+    );
   }
 
   onSave() async {
@@ -127,6 +225,8 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                   key: key,
                   child: Column(
                     children: [
+                      _buildMapPreview(),
+                      const SizedBox(height: 16),
                       SelectableIconsRow(
                         onUpdateType: (type) {
                           setState(() {
@@ -221,7 +321,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                                   ),
                                 ],
                               ),
-
                               Field(
                                 text: 'رقم الهاتف',
                                 validateText: 'رقم الهاتف',
@@ -250,7 +349,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                                         color: Colors.black,
                                       ),
                                     ),
-
                                     Switch(
                                       value: setDefault,
                                       activeColor: kMainColor,
@@ -282,7 +380,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                         padding: const EdgeInsets.all(8.0),
                         child: GestureDetector(
                           onTap: () => onSave(),
-
                           child: Container(
                             height: 50,
                             width: size.width,
@@ -321,7 +418,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 ),
               ),
             ),
-
             loading
                 ? Container(
                     width: size.width,

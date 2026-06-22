@@ -187,8 +187,9 @@ class _ProductCardState extends State<ProductCard> {
           children: [
             // IMAGE
             Container(
-              height: 115,
-              margin: const EdgeInsets.all(10),
+              height:
+                  128, // Increased from 115 to make the image visibly larger
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: kPrimaryWhiteColor,
                 borderRadius: BorderRadius.circular(14),

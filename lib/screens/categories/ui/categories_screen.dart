@@ -49,10 +49,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         backgroundColor: const Color(0xFFF6F7F9),
         appBar: AppBar(
           leading: SizedBox(),
-
           title: const Text(
             'التصنيفات',
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20),
           ),
           centerTitle: true,
         ),
@@ -132,7 +131,6 @@ class _CategoryCardState extends State<_CategoryCard> {
               ),
             ),
           ),
-
           if (expanded)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),

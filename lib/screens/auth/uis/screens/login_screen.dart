@@ -46,7 +46,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 40),
-
                           Text(
                             'أهلاً!',
                             style: TextStyle(
@@ -56,7 +55,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-
                           const Text(
                             'سجّل دخولك للمتابعة',
                             style: TextStyle(
@@ -64,9 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.black54,
                             ),
                           ),
-
                           const SizedBox(height: 24),
-
                           Center(
                             child: Image.asset(
                               'assets/images/login.jpeg',
@@ -74,9 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               fit: BoxFit.contain,
                             ),
                           ),
-
                           const SizedBox(height: 24),
-
                           const Text(
                             'رقم الجوال',
                             style: TextStyle(
@@ -84,9 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontSize: 14,
                             ),
                           ),
-
                           const SizedBox(height: 12),
-
                           Directionality(
                             textDirection: TextDirection.ltr,
                             child: Field(
@@ -105,9 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 28),
-
                           SizedBox(
                             width: double.infinity,
                             height: 52,
@@ -129,9 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 12),
-
                           Center(
                             child: TextButton(
                               onPressed: () {
@@ -146,7 +134,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 24),
                         ],
                       ),
@@ -192,7 +179,8 @@ class _LoginScreenState extends State<LoginScreen> {
       showFailedTopSnackBar(
         context: context,
         title: 'خطأ',
-        content: result['message'],
+        // content: result['message'],
+        content: 'ليس لديك حساب مسجل بهذا الرقم',
       );
     }
   }

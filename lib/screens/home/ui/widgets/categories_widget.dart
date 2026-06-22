@@ -41,9 +41,39 @@ class _CategoriesHorizontalGridState extends State<CategoriesHorizontalGrid> {
           }
 
           final categories = snapshot.data!;
+
           if (categories.isEmpty) {
             return const Center(child: Text('لا يوجد تصنيفات'));
           }
+          final preferredOrder = [
+            1, // Put the ID for what you want as item #1 here
+            4, // Put the ID for what you want as item #2 here
+            5, //3
+            6, //4
+            7, //5
+            8, //6
+            9, // The ID of the item you want in position 7
+            10, // The ID of the item you want in position 8
+            11, // The ID of the item you want in position 9
+            16, // The ID of the item you want in position 10
+            17, // The ID of the item you want in position 11
+            18, //12
+            12, //13
+            13, //14
+            14, //15
+          ];
+
+          categories.sort((a, b) {
+            int indexA = preferredOrder.indexOf(a.id);
+            int indexB = preferredOrder.indexOf(b.id);
+
+            // If the backend adds a NEW category later that isn't in your list,
+            // this safely pushes it to the very bottom of the grid instead of crashing.
+            if (indexA == -1) indexA = 9999;
+            if (indexB == -1) indexB = 9999;
+
+            return indexA.compareTo(indexB);
+          });
 
           return GridView.builder(
             shrinkWrap: true,

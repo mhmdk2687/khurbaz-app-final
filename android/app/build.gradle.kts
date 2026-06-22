@@ -43,7 +43,7 @@ android {
         applicationId = "com.app.khurbaz"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
-        versionCode = 3
+        versionCode = 4
         versionName = "1.2"
     }
 
